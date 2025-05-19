@@ -34,6 +34,11 @@ const ResultPage = () => {
     const [typeViewModel, setTypeViewModel] = useState<string>("");
     const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
     const [questions, setQuestions] = useState<Question[]>();
+    const [typeDisplay, setTypeDisplay] = useState({
+      img: FailedIcon,
+      title: "Failed",
+      content: "You are failed!"
+    });
 
     const { id } = useParams();
     const navigate = useNavigate();
@@ -45,7 +50,8 @@ const ResultPage = () => {
         
         getQuizAttempt(Number(id))
             .then((data: QuizAttempt) => {
-                setAttempt(data)
+                setAttempt(data);
+                getType(data);
             })
             .catch((err) => console.error("Something wrong when get quiz attempt:", err));
     },[]);
@@ -72,14 +78,14 @@ const ResultPage = () => {
       setViewModes(mapped);
     };
 
-    function getType(){
+    function getType(quizAttempt: QuizAttempt){
         const TypeDisplay = {
             img: FailedIcon,
             title: "Failed",
             content: "You are failed!"
         };
 
-        switch(attempt?.correctAnswersCount){
+        switch(quizAttempt?.correctAnswersCount){
             case 3: case 4:
                 TypeDisplay.img = CompleteIcon;
                 TypeDisplay.title = "Complete";
@@ -97,9 +103,8 @@ const ResultPage = () => {
                 break;
         }
 
-        return TypeDisplay;
+        setTypeDisplay(TypeDisplay);
     }
-    const TypeDisplay = getType();
 
     const handleNavigate = (type:string) =>{
       if(type === "Home"){
@@ -110,10 +115,10 @@ const ResultPage = () => {
     }
   return (
     <div className="bg-primary h-full flex justify-center items-center overflow-hidden">
-      <div className="bg-white w-[95%] h-[98%] p-5 rounded-lg shadow-sm flex flex-col gap-2 justify-center items-center">
-            <img className="w-28 h-28" src={TypeDisplay.img} alt="" />
-            <p className="text-2xl font-bold">{TypeDisplay.title}</p>
-            <p>{TypeDisplay.content}</p>
+      {attempt && <div className="bg-white w-[95%] h-[98%] p-5 rounded-lg shadow-sm flex flex-col gap-2 justify-center items-center">
+            <img className="w-28 h-28" src={typeDisplay.img} alt="" />
+            <p className="text-2xl font-bold">{typeDisplay.title}</p>
+            <p>{typeDisplay.content}</p>
             <p>{attempt?.correctAnswersCount}/{MAX_QUESTION} correct answers in {calculateDuration(attempt?.startTime ?? new Date(), attempt?.endTime ?? new Date())}</p>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                 <button onClick={() => getAnswerDetail("correct")} className="btn px-3 py-2 bg-green-500 rounded-md hover:bg-green-600 text-white duration-300">Correct answers</button>
@@ -157,7 +162,7 @@ const ResultPage = () => {
                 </div>
               )
             }
-      </div>
+      </div>}
     </div>
   );
 };
